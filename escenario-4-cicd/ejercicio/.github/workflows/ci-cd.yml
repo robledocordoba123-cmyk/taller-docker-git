@@ -1,0 +1,91 @@
+﻿name: CI/CD con Tests y Seguridad
+
+on:
+  push:
+    branches: [ main, develop ]
+    tags: [ "v*" ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  IMAGE_NAME: usuario-dockerhub/app-cicd-ejercicio
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del codigo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Instalar dependencias
+        run: |
+          pip install -r ejercicio/src/requirements.txt
+          pip install pytest httpx
+
+      - name: Ejecutar tests
+        run: pytest ejercicio/tests/ -v
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout del codigo
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login a DockerHub
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Login a GHCR
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extraer metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            docker.io/${{ env.IMAGE_NAME }}
+            ghcr.io/${{ github.repository }}
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build y Push imagen
+        uses: docker/build-push-action@v5
+        with:
+          context: ./ejercicio
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Scan de vulnerabilidades con Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: docker.io/${{ env.IMAGE_NAME }}:latest
+          format: table
+          exit-code: 0
+          severity: CRITICAL,HIGH

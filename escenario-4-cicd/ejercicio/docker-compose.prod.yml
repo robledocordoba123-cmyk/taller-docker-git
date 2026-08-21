@@ -1,0 +1,11 @@
+﻿version: '3.8'
+
+services:
+  app:
+    image: usuario-dockerhub/app-cicd-ejercicio:latest
+    container_name: app_cicd_prod
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      NODE_ENV: production
