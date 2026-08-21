@@ -1,4 +1,4 @@
-name: Build y Push a DockerHub
+name: Build y Push a DockerHub (Ejemplo)
 
 on:
   push:
@@ -46,7 +46,7 @@ jobs:
       - name: Build y Push imagen
         uses: docker/build-push-action@v5
         with:
-          context: ./ejemplo
+          context: ./escenario-4-cicd/ejemplo
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

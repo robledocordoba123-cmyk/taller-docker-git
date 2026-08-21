@@ -24,11 +24,11 @@ jobs:
 
       - name: Instalar dependencias
         run: |
-          pip install -r ejercicio/src/requirements.txt
+          pip install -r escenario-4-cicd/ejercicio/src/requirements.txt
           pip install pytest httpx
 
       - name: Ejecutar tests
-        run: pytest ejercicio/tests/ -v
+        run: pytest escenario-4-cicd/ejercicio/tests/ -v
 
   build:
     needs: test
@@ -75,7 +75,7 @@ jobs:
       - name: Build y Push imagen
         uses: docker/build-push-action@v5
         with:
-          context: ./ejercicio
+          context: ./escenario-4-cicd/ejercicio
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
