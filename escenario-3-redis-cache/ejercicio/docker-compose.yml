@@ -1,0 +1,68 @@
+﻿version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: ejercicio3_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: cachedb
+    volumes:
+      - pg_data_e3:/var/lib/postgresql/data
+      - ./db:/docker-entrypoint-initdb.d
+    ports:
+      - "5434:5432"
+    networks:
+      - cache_network_e3
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: ejercicio3_redis
+    restart: always
+    ports:
+      - "6380:6379"
+    networks:
+      - cache_network_e3
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build: ./app
+    container_name: ejercicio3_app
+    restart: always
+    ports:
+      - "8001:8000"
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: cachedb
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - cache_network_e3
+    volumes:
+      - ./app:/app
+
+volumes:
+  pg_data_e3:
+
+networks:
+  cache_network_e3:
+    driver: bridge
