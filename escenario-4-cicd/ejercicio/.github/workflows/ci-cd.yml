@@ -1,4 +1,4 @@
-﻿name: CI/CD con Tests y Seguridad
+name: CI/CD con Tests y Seguridad
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
     branches: [ main ]
 
 env:
-  IMAGE_NAME: usuario-dockerhub/app-cicd-ejercicio
+  IMAGE_NAME: manuads/app-cicd-ejercicio
 
 jobs:
   test:
