@@ -12,3 +12,5 @@ API en FastAPI con pipeline de CI/CD usando GitHub Actions.
 docker build -t app-cicd-ejercicio .
 docker run -p 8000:8000 app-cicd-ejercicio
 curl http://localhost:8000/health
+
+![CI/CD](https://github.com/robledocordoba123-cmyk/taller-docker-git/actions/workflows/ci-cd-ejercicio.yml/badge.svg)
